@@ -3,9 +3,11 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Article, Prisma } from '@prisma/client';
 import { Cache } from 'cache-manager';
 import { articleSlugKey } from 'src/common/redis.constant';
+import { SearchService } from '../search/search.service';
 import { CreateArticleDto } from './dto/request/create-article.dto';
 import { FilterArticleDto } from './dto/request/filter-article.dto';
 import { PaginatedArticleResponseDto } from './dto/response/paginated-article-response.dto';
+import { ArticleDto } from './dto/response/summary-article-response.dto';
 import { ArticleRepository } from './repository/article.repository';
 
 @Injectable()
@@ -13,12 +15,14 @@ export class ArticleService {
   constructor(
     private readonly articleRepository: ArticleRepository,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly searchService: SearchService,
   ) {}
 
   async createArticle(dto: CreateArticleDto) {
     const article = await this.articleRepository.create(dto);
     const cacheKey = articleSlugKey(article.slug);
     await this.cacheManager.set(cacheKey, article);
+    await this.searchService.indexArticle(article);
     return article;
   }
 
@@ -33,15 +37,23 @@ export class ArticleService {
       limit = 10,
     } = query;
 
-    const where: Prisma.ArticleWhereInput = {};
-
     if (search) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { content: { contains: search, mode: 'insensitive' } },
-      ];
+      const { results, total } = await this.searchService.search(
+        search,
+        page,
+        limit,
+      );
+
+      return {
+        data: results as unknown as ArticleDto[],
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
     }
 
+    const where: Prisma.ArticleWhereInput = {};
     const skip = (page - 1) * limit;
 
     const { data, total } = await this.articleRepository.getAll({
@@ -52,7 +64,7 @@ export class ArticleService {
     });
 
     return {
-      data,
+      data: data as unknown as ArticleDto[],
       total,
       page,
       limit,
@@ -85,6 +97,7 @@ export class ArticleService {
     const cacheKey = articleSlugKey(updatedArticle.slug);
     console.log(`🧹 Cache CLEAR: ${cacheKey}`);
     await this.cacheManager.del(cacheKey);
+    await this.searchService.updateArticle(updatedArticle);
     return updatedArticle;
   }
 
@@ -93,6 +106,7 @@ export class ArticleService {
     const cacheKey = articleSlugKey(deletedArticle.slug);
     console.log(`🧹 Cache CLEAR: ${cacheKey}`);
     await this.cacheManager.del(cacheKey);
+    await this.searchService.removeArticle(id);
     return { message: 'Article deleted successfully' };
   }
 }

@@ -41,7 +41,7 @@ export class SearchService {
     const hits = response.hits.hits;
     const total = (response.hits.total as { value: number }).value;
     return {
-      result: hits.map((hit) => hit._source),
+      results: hits.map((hit) => hit._source),
       total,
     };
   }
