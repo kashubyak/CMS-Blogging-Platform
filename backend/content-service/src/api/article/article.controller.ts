@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -70,5 +71,15 @@ export class ArticleController {
     @Body() dto: UpdateArticleDto,
   ) {
     return this.articleService.updateArticle(id, dto);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete article by id' })
+  @ApiOkResponse({
+    description: 'The article has been successfully deleted.',
+  })
+  deleteArticle(@Param('id', ParseIntPipe) id: number) {
+    return this.articleService.deleteArticle(id);
   }
 }

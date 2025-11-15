@@ -42,4 +42,8 @@ export class ArticleRepository {
       data: dto,
     });
   }
+
+  async delete(id: number): Promise<Article> {
+    return await this.prisma.article.delete({ where: { id } });
+  }
 }

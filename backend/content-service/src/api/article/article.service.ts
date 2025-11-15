@@ -87,4 +87,12 @@ export class ArticleService {
     await this.cacheManager.del(cacheKey);
     return updatedArticle;
   }
+
+  async deleteArticle(id: number) {
+    const deletedArticle = await this.articleRepository.delete(id);
+    const cacheKey = articleSlugKey(deletedArticle.slug);
+    console.log(`🧹 Cache CLEAR: ${cacheKey}`);
+    await this.cacheManager.del(cacheKey);
+    return { message: 'Article deleted successfully' };
+  }
 }
