@@ -31,4 +31,8 @@ export class ArticleRepository {
 
     return { data, total };
   }
+
+  findOneSlug(slug: string): Promise<Article | null> {
+    return this.prisma.article.findUnique({ where: { slug } });
+  }
 }

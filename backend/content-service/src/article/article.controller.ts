@@ -4,10 +4,15 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiCreatedResponse, ApiOperation } from '@nestjs/swagger';
+import {
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/request/create-article.dto';
 import { FilterArticleDto } from './dto/request/filter-article.dto';
@@ -37,5 +42,16 @@ export class ArticleController {
   })
   getAllArticles(@Query() query: FilterArticleDto) {
     return this.articleService.getAllArticles(query);
+  }
+
+  @Get(':slug')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get article by slug (Cached)' })
+  @ApiOkResponse({
+    description: 'The article has been successfully retrieved.',
+    type: ArticleDto,
+  })
+  getOneArticle(@Param('slug') slug: string) {
+    return this.articleService.getArticleBySlug(slug);
   }
 }
