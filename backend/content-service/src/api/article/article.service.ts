@@ -2,7 +2,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Article, Prisma } from '@prisma/client';
 import { Cache } from 'cache-manager';
-import { articleSlugKey } from 'src/common/redis.const';
+import { articleSlugKey } from 'src/common/redis.constant';
 import { CreateArticleDto } from './dto/request/create-article.dto';
 import { FilterArticleDto } from './dto/request/filter-article.dto';
 import { PaginatedArticleResponseDto } from './dto/response/paginated-article-response.dto';
@@ -16,7 +16,10 @@ export class ArticleService {
   ) {}
 
   async createArticle(dto: CreateArticleDto) {
-    return this.articleRepository.create(dto);
+    const article = await this.articleRepository.create(dto);
+    const cacheKey = articleSlugKey(article.slug);
+    await this.cacheManager.set(cacheKey, article);
+    return article;
   }
 
   async getAllArticles(
@@ -75,5 +78,13 @@ export class ArticleService {
     await this.cacheManager.set(cacheKey, article);
 
     return article;
+  }
+
+  async updateArticle(id: number, dto: Partial<CreateArticleDto>) {
+    const updatedArticle = await this.articleRepository.update(id, dto);
+    const cacheKey = articleSlugKey(updatedArticle.slug);
+    console.log(`🧹 Cache CLEAR: ${cacheKey}`);
+    await this.cacheManager.del(cacheKey);
+    return updatedArticle;
   }
 }

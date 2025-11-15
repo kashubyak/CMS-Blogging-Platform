@@ -5,6 +5,8 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseIntPipe,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
@@ -16,6 +18,7 @@ import {
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/request/create-article.dto';
 import { FilterArticleDto } from './dto/request/filter-article.dto';
+import { UpdateArticleDto } from './dto/request/update-article.dto';
 import { PaginatedArticleResponseDto } from './dto/response/paginated-article-response.dto';
 import { ArticleDto } from './dto/response/summary-article-response.dto';
 
@@ -53,5 +56,19 @@ export class ArticleController {
   })
   getOneArticle(@Param('slug') slug: string) {
     return this.articleService.getArticleBySlug(slug);
+  }
+
+  @Patch(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update article by id' })
+  @ApiOkResponse({
+    description: 'The article has been successfully updated.',
+    type: ArticleDto,
+  })
+  updateArticle(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateArticleDto,
+  ) {
+    return this.articleService.updateArticle(id, dto);
   }
 }

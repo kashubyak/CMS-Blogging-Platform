@@ -35,4 +35,11 @@ export class ArticleRepository {
   findOneSlug(slug: string): Promise<Article | null> {
     return this.prisma.article.findUnique({ where: { slug } });
   }
+
+  async update(id: number, dto: Partial<CreateArticleDto>): Promise<Article> {
+    return await this.prisma.article.update({
+      where: { id },
+      data: dto,
+    });
+  }
 }
