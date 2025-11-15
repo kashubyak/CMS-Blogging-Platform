@@ -10,12 +10,12 @@ export class CreateArticleDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  content: string;
+  slug: string;
 
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  slug: string;
+  content: string;
 
   @ApiProperty()
   @IsNumber()
