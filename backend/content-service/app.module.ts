@@ -2,6 +2,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import * as redisStore from 'cache-manager-ioredis';
 import { PrismaModule } from 'prisma/prisma.module';
+import { ArticleModule } from './src/article/article.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { PrismaModule } from 'prisma/prisma.module';
       ttl: 300,
     }),
     PrismaModule,
+    ArticleModule,
   ],
   controllers: [],
   providers: [],
