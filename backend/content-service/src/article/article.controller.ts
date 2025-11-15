@@ -12,7 +12,7 @@ import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/request/create-article.dto';
 import { FilterArticleDto } from './dto/request/filter-article.dto';
 import { PaginatedArticleResponseDto } from './dto/response/paginated-article-response.dto';
-import { SummaryArticleResponseDto } from './dto/response/summary-article-response.dto';
+import { ArticleDto } from './dto/response/summary-article-response.dto';
 
 @Controller('article')
 export class ArticleController {
@@ -22,7 +22,7 @@ export class ArticleController {
   @ApiOperation({ summary: 'Create a new article' })
   @ApiCreatedResponse({
     description: 'The article has been successfully created.',
-    type: SummaryArticleResponseDto,
+    type: ArticleDto,
   })
   createArticle(@Body() dto: CreateArticleDto) {
     return this.articleService.createArticle(dto);

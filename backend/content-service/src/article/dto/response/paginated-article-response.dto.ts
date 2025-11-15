@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { SummaryArticleResponseDto } from './summary-article-response.dto';
+import { ArticleDto } from './summary-article-response.dto';
 
 export class PaginatedArticleResponseDto {
-  @ApiProperty({ type: [SummaryArticleResponseDto] })
-  data: SummaryArticleResponseDto[];
+  @ApiProperty({ type: [ArticleDto] })
+  data: ArticleDto[];
 
   @ApiProperty()
   total: number;
