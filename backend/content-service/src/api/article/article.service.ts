@@ -2,6 +2,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Article, Prisma } from '@prisma/client';
 import { Cache } from 'cache-manager';
+import { articleSlugKey } from 'src/common/redis.const';
 import { CreateArticleDto } from './dto/request/create-article.dto';
 import { FilterArticleDto } from './dto/request/filter-article.dto';
 import { PaginatedArticleResponseDto } from './dto/response/paginated-article-response.dto';
@@ -57,12 +58,14 @@ export class ArticleService {
   }
 
   async getArticleBySlug(slug: string): Promise<Article | null> {
-    const cacheKey = `article_${slug}`;
+    const cacheKey = articleSlugKey(slug);
     const cachedArticle = await this.cacheManager.get<Article>(cacheKey);
+
     if (cachedArticle) {
       console.log(`🎯 Cache HIT: ${slug}`);
       return cachedArticle;
     }
+
     console.log(`💾 Cache MISS: ${slug}`);
     const article = await this.articleRepository.findOneSlug(slug);
 
