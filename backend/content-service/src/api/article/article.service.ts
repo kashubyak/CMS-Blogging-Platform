@@ -1,5 +1,11 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  NotFoundException,
+  OnModuleInit,
+} from '@nestjs/common';
+import { ClientKafka } from '@nestjs/microservices';
 import { Article, Prisma } from '@prisma/client';
 import { Cache } from 'cache-manager';
 import { articleSlugKey } from 'src/common/redis.constant';
@@ -11,18 +17,32 @@ import { ArticleDto } from './dto/response/summary-article-response.dto';
 import { ArticleRepository } from './repository/article.repository';
 
 @Injectable()
-export class ArticleService {
+export class ArticleService implements OnModuleInit {
   constructor(
     private readonly articleRepository: ArticleRepository,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly searchService: SearchService,
+    @Inject('KAFKA_SERVICE') private readonly kafkaClient: ClientKafka,
   ) {}
+
+  async onModuleInit() {
+    await this.kafkaClient.connect();
+  }
 
   async createArticle(dto: CreateArticleDto) {
     const article = await this.articleRepository.create(dto);
     const cacheKey = articleSlugKey(article.slug);
-    await this.cacheManager.set(cacheKey, article);
-    await this.searchService.indexArticle(article);
+
+    await Promise.all([
+      this.cacheManager.set(cacheKey, article),
+      this.searchService.indexArticle(article),
+    ]);
+
+    this.kafkaClient.emit('article.created', {
+      articleId: article.id,
+      title: article.title,
+    });
+
     return article;
   }
 
@@ -95,18 +115,32 @@ export class ArticleService {
   async updateArticle(id: number, dto: Partial<CreateArticleDto>) {
     const updatedArticle = await this.articleRepository.update(id, dto);
     const cacheKey = articleSlugKey(updatedArticle.slug);
-    console.log(`🧹 Cache CLEAR: ${cacheKey}`);
-    await this.cacheManager.del(cacheKey);
-    await this.searchService.updateArticle(updatedArticle);
+
+    await Promise.all([
+      this.cacheManager.del(cacheKey),
+      this.searchService.updateArticle(updatedArticle),
+    ]);
+
+    this.kafkaClient.emit('article.updated', {
+      articleId: updatedArticle.id,
+    });
+
     return updatedArticle;
   }
 
   async deleteArticle(id: number) {
     const deletedArticle = await this.articleRepository.delete(id);
     const cacheKey = articleSlugKey(deletedArticle.slug);
-    console.log(`🧹 Cache CLEAR: ${cacheKey}`);
-    await this.cacheManager.del(cacheKey);
-    await this.searchService.removeArticle(id);
+
+    await Promise.all([
+      this.cacheManager.del(cacheKey),
+      this.searchService.removeArticle(id),
+    ]);
+
+    this.kafkaClient.emit('article.deleted', {
+      articleId: deletedArticle.id,
+    });
+
     return { message: 'Article deleted successfully' };
   }
 }
