@@ -6,20 +6,39 @@ import {
   HttpCode,
   HttpStatus,
   Patch,
+  Query,
   Res,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Role } from '@prisma/client';
 import { Response } from 'express';
 import { CurrentUserId } from 'src/common/decorators/current-user.decorator';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { RolesGuard } from 'src/common/guards/roles.guard';
 import { AccessTokenGuard } from '../auth/guards/access-token.guard';
+import { FilterUserDto } from './dto/request/filter-user.dto';
 import { UpdateUserDto } from './dto/request/update-user.dto';
+import { PaginatedUserResponseDto } from './dto/response/paginated-user-response.dto';
 import { UserResponseDto } from './dto/response/user-response.dto';
 import { UserService } from './user.service';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: '[ADMIN] Get all users with pagination' })
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, type: PaginatedUserResponseDto })
+  getAllUsers(
+    @Query() query: FilterUserDto,
+  ): Promise<PaginatedUserResponseDto> {
+    return this.userService.getAllUsers(query);
+  }
 
   @UseGuards(AccessTokenGuard)
   @Get('me')

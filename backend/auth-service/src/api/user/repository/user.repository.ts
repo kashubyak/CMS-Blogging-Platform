@@ -27,4 +27,25 @@ export class UserRepository {
       where: { id: userId },
     });
   }
+
+  async findAll(args: {
+    where: Prisma.UserWhereInput;
+    orderBy: Prisma.UserOrderByWithRelationInput;
+    skip: number;
+    take: number;
+  }): Promise<{ data: User[]; total: number }> {
+    const { where, orderBy, skip, take } = args;
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.user.findMany({
+        where,
+        orderBy,
+        skip,
+        take,
+      }),
+      this.prisma.user.count({ where }),
+    ]);
+
+    return { data, total };
+  }
 }
