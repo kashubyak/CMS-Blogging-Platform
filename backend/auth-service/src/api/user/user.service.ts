@@ -116,4 +116,9 @@ export class UserService {
       updatedAt: user.updatedAt,
     };
   }
+
+  async deleteUserById(userId: number) {
+    await this.userRepository.deleteUser(userId);
+    return { message: 'User deleted successfully by admin' };
+  }
 }

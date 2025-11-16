@@ -70,6 +70,18 @@ export class UserController {
     return this.userService.updateUserById(id, dto);
   }
 
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: '[ADMIN] Delete any user by ID' })
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'User deleted' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  deleteUserById(@Param('id', ParseIntPipe) id: number) {
+    return this.userService.deleteUserById(id);
+  }
+
   @UseGuards(AccessTokenGuard)
   @Get('me')
   @HttpCode(HttpStatus.OK)
