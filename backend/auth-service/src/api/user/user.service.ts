@@ -3,6 +3,7 @@ import { Prisma, User } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { Response } from 'express';
 import { refreshTokenName } from 'src/common/auth.constant';
+import { AdminUpdateUserDto } from './dto/request/admin-update-user.dto';
 import { FilterUserDto } from './dto/request/filter-user.dto';
 import { UpdateUserDto } from './dto/request/update-user.dto';
 import { PaginatedUserResponseDto } from './dto/response/paginated-user-response.dto';
@@ -84,6 +85,25 @@ export class UserService {
     const user = await this.userRepository.findById(id);
     if (!user) throw new NotFoundException(`User with ID ${id} not found`);
     return this.buildUserResponse(user);
+  }
+
+  async updateUserById(
+    userId: number,
+    dto: AdminUpdateUserDto,
+  ): Promise<UserResponseDto> {
+    const dataToUpdate: Prisma.UserUpdateInput = {};
+
+    if (dto.password)
+      dataToUpdate.password = await bcrypt.hash(dto.password, 10);
+    if (dto.fullName) dataToUpdate.fullName = dto.fullName;
+    if (dto.role) dataToUpdate.role = dto.role;
+
+    const updatedUser = await this.userRepository.updateUser(
+      userId,
+      dataToUpdate,
+    );
+
+    return this.buildUserResponse(updatedUser);
   }
 
   private buildUserResponse(user: User): UserResponseDto {
