@@ -1,10 +1,12 @@
 import {
   ForbiddenException,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { ClientKafka } from '@nestjs/microservices';
 import { Role } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { Response } from 'express';
@@ -23,7 +25,12 @@ export class AuthService {
     private readonly authRepository: AuthRepository,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
+    @Inject('KAFKA_SERVICE') private readonly kafkaClient: ClientKafka,
   ) {}
+
+  async onModuleInit() {
+    await this.kafkaClient.connect();
+  }
 
   async signUp(dto: SignUpDto): Promise<UserResponseDto> {
     const password = await bcrypt.hash(dto.password, 10);
@@ -31,6 +38,12 @@ export class AuthService {
       email: dto.email,
       password,
       fullName: dto.fullName,
+    });
+
+    this.kafkaClient.emit('user.created', {
+      id: newUser.id,
+      email: newUser.email,
+      fullName: newUser.fullName,
     });
     return {
       id: newUser.id,
