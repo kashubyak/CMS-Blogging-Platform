@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { ClientKafka } from '@nestjs/microservices';
 import { Prisma, User } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { Response } from 'express';
@@ -12,7 +13,14 @@ import { UserRepository } from './repository/user.repository';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    @Inject('KAFKA_SERVICE') private readonly kafkaClient: ClientKafka,
+  ) {}
+
+  async onModuleInit() {
+    await this.kafkaClient.connect();
+  }
 
   async getMe(userId: number): Promise<UserResponseDto> {
     const user = await this.userRepository.findById(userId);
@@ -33,6 +41,11 @@ export class UserService {
       dataToUpdate,
     );
 
+    this.kafkaClient.emit('user.updated', {
+      id: updatedUser.id,
+      fullName: updatedUser.fullName,
+    });
+
     return this.buildUserResponse(updatedUser);
   }
 
@@ -43,6 +56,10 @@ export class UserService {
       httpOnly: true,
       secure: false,
       sameSite: 'lax',
+    });
+
+    this.kafkaClient.emit('user.deleted', {
+      id: userId,
     });
 
     return { message: 'User account deleted successfully' };
@@ -103,7 +120,20 @@ export class UserService {
       dataToUpdate,
     );
 
+    this.kafkaClient.emit('user.updated.admin', {
+      id: updatedUser.id,
+      ...dataToUpdate,
+    });
+
     return this.buildUserResponse(updatedUser);
+  }
+
+  async deleteUserById(userId: number) {
+    await this.userRepository.deleteUser(userId);
+    this.kafkaClient.emit('user.deleted.admin', {
+      id: userId,
+    });
+    return { message: 'User deleted successfully by admin' };
   }
 
   private buildUserResponse(user: User): UserResponseDto {
@@ -115,10 +145,5 @@ export class UserService {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
-  }
-
-  async deleteUserById(userId: number) {
-    await this.userRepository.deleteUser(userId);
-    return { message: 'User deleted successfully by admin' };
   }
 }

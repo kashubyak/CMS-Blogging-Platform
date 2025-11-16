@@ -2,7 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from 'prisma/prisma.module';
 import { AuthModule } from 'src/api/auth/auth.module';
-import { UserModule } from './src/api/user/user.module';
+import { UserModule } from 'src/api/user/user.module';
+import { KafkaModule } from './src/kafka/kafka.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { UserModule } from './src/api/user/user.module';
     PrismaModule,
     AuthModule,
     UserModule,
+    KafkaModule,
   ],
   controllers: [],
   providers: [],
