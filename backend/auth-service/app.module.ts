@@ -1,21 +1,19 @@
-import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
-import * as redisStore from 'cache-manager-ioredis';
+import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from 'prisma/prisma.module';
-import { ArticleModule } from './src/api/article/article.module';
+import { AuthModule } from 'src/api/auth/auth.module';
+import { UserModule } from 'src/api/user/user.module';
 import { KafkaModule } from './src/kafka/kafka.module';
 
 @Module({
   imports: [
-    CacheModule.register({
+    ConfigModule.forRoot({
       isGlobal: true,
-      store: redisStore,
-      host: 'localhost',
-      port: 6379,
-      ttl: 300,
+      envFilePath: '.env',
     }),
     PrismaModule,
-    ArticleModule,
+    AuthModule,
+    UserModule,
     KafkaModule,
   ],
   controllers: [],
