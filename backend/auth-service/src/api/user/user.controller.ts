@@ -1,13 +1,16 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Patch,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Response } from 'express';
 import { CurrentUserId } from 'src/common/decorators/current-user.decorator';
 import { AccessTokenGuard } from '../auth/guards/access-token.guard';
 import { UpdateUserDto } from './dto/request/update-user.dto';
@@ -39,5 +42,18 @@ export class UserController {
     @Body() dto: UpdateUserDto,
   ): Promise<UserResponseDto> {
     return this.userService.updateMe(userId, dto);
+  }
+
+  @UseGuards(AccessTokenGuard)
+  @Delete('me')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete current user account' })
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'User account deleted' })
+  deleteMe(
+    @CurrentUserId() userId: number,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.userService.deleteMe(userId, res);
   }
 }

@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
 import bcrypt from 'bcryptjs/umd/types';
+import { Response } from 'express';
+import { refreshTokenName } from 'src/common/auth.constant';
 import { UpdateUserDto } from './dto/request/update-user.dto';
 import { UserResponseDto } from './dto/response/user-response.dto';
 import { UserRepository } from './repository/user.repository';
@@ -39,6 +41,17 @@ export class UserService {
     return this.buildUserResponse(updatedUser);
   }
 
+  async deleteMe(userId: number, res: Response) {
+    await this.userRepository.deleteUser(userId);
+
+    res.clearCookie(refreshTokenName, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+    });
+
+    return { message: 'User account deleted successfully' };
+  }
   private buildUserResponse(user: User): UserResponseDto {
     return {
       id: user.id,
