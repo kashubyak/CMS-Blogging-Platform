@@ -17,7 +17,7 @@ model User {
   email              String   @unique
   password           String
   hashedRefreshToken String?  @unique
-  fullName           String?
+  fullName           String
   role               Role     @default(USER)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
