@@ -16,6 +16,12 @@ export class AuthRepository {
     });
   }
 
+  async findById(id: number): Promise<User | null> {
+    return this.prisma.user.findUnique({
+      where: { id },
+    });
+  }
+
   async updateRtHash(userId: number, hash: string): Promise<void> {
     await this.prisma.user.update({
       where: { id: userId },

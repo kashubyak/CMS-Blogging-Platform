@@ -6,6 +6,7 @@ import { JWT } from 'src/common/auth.constant';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AccessTokenGuard } from './guards/access-token.guard';
+import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { AuthRepository } from './repository/auth.repository';
 import { AccessTokenStrategy } from './strategies/access-token.strategy';
 import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
@@ -33,6 +34,7 @@ import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
     AccessTokenStrategy,
     RefreshTokenStrategy,
     AccessTokenGuard,
+    RefreshTokenGuard,
   ],
 })
 export class AuthModule {}

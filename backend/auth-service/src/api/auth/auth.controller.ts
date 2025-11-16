@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
+import { CurrentUserPayload } from 'src/common/decorators/current-user-payload.decorator';
 import { CurrentUserId } from 'src/common/decorators/current-user.decorator';
 import { AuthService } from './auth.service';
 import { SignInDto } from './dto/request/sign-in.dto';
@@ -16,6 +17,7 @@ import { SignUpDto } from './dto/request/sign-up.dto';
 import { SignInResponseDto } from './dto/response/sign-in-response.dto';
 import { UserResponseDto } from './dto/response/user-response.dto';
 import { AccessTokenGuard } from './guards/access-token.guard';
+import { RefreshTokenGuard } from './guards/refresh-token.guard';
 
 @ApiTags('1. Authentication')
 @Controller('auth')
@@ -56,5 +58,18 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     return this.authService.logout(userId, res);
+  }
+
+  @UseGuards(RefreshTokenGuard)
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Refresh access token' })
+  @ApiResponse({ status: 200, type: SignInResponseDto })
+  async refreshTokens(
+    @CurrentUserPayload()
+    user: { sub: number; email: string; refreshToken: string },
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<SignInResponseDto> {
+    return this.authService.refreshTokens(user.sub, user.refreshToken, res);
   }
 }

@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from '@prisma/client';
@@ -66,6 +70,34 @@ export class AuthService {
       sameSite: 'lax',
     });
     return { message: 'Logged out successfully' };
+  }
+
+  async refreshTokens(
+    userId: number,
+    rtFromCookie: string,
+    res: Response,
+  ): Promise<SignInResponseDto> {
+    const user = await this.authRepository.findById(userId);
+    if (!user || !user.hashedRefreshToken)
+      throw new ForbiddenException('Access Denied');
+
+    const isRtMatches = await bcrypt.compare(
+      rtFromCookie,
+      user.hashedRefreshToken,
+    );
+    if (!isRtMatches) throw new ForbiddenException('Access Denied');
+
+    const tokens = await this.getTokens(user.id, user.email, user.role);
+    await this.updateRtHash(user.id, tokens.refreshToken);
+
+    res.cookie(refreshTokenName, tokens.refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
+    return { accessToken: tokens.accessToken };
   }
 
   private async updateRtHash(
