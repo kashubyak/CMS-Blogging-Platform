@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { AccessTokenGuard } from './guards/access-token.guard';
 import { AuthRepository } from './repository/auth.repository';
 import { AccessTokenStrategy } from './strategies/access-token.strategy';
 import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
@@ -30,6 +31,7 @@ import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
     AuthRepository,
     AccessTokenStrategy,
     RefreshTokenStrategy,
+    AccessTokenGuard,
   ],
 })
 export class AuthModule {}

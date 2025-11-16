@@ -58,6 +58,16 @@ export class AuthService {
     return { accessToken: tokens.accessToken };
   }
 
+  async logout(userId: number, res: Response) {
+    await this.authRepository.clearRtHash(userId);
+    res.clearCookie(refreshTokenName, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+    });
+    return { message: 'Logged out successfully' };
+  }
+
   private async updateRtHash(
     userId: number,
     refreshToken: string,

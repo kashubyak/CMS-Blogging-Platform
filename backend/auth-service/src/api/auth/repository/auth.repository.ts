@@ -22,4 +22,11 @@ export class AuthRepository {
       data: { hashedRefreshToken: hash },
     });
   }
+
+  async clearRtHash(userId: number): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { hashedRefreshToken: null },
+    });
+  }
 }

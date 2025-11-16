@@ -5,14 +5,17 @@ import {
   HttpStatus,
   Post,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
+import { CurrentUserId } from 'src/common/decorators/current-user.decorator';
 import { AuthService } from './auth.service';
 import { SignInDto } from './dto/request/sign-in.dto';
 import { SignUpDto } from './dto/request/sign-up.dto';
 import { SignInResponseDto } from './dto/response/sign-in-response.dto';
 import { UserResponseDto } from './dto/response/user-response.dto';
+import { AccessTokenGuard } from './guards/access-token.guard';
 
 @ApiTags('1. Authentication')
 @Controller('auth')
@@ -41,5 +44,17 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<SignInResponseDto> {
     return this.authService.signIn(dto, res);
+  }
+
+  @UseGuards(AccessTokenGuard)
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Logout user' })
+  @ApiResponse({ status: 200, description: 'User logged out' })
+  async logout(
+    @CurrentUserId() userId: number,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.logout(userId, res);
   }
 }
