@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Role } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { Response } from 'express';
+import { refreshTokenName } from 'src/common/auth.constant';
 import { SignInDto } from './dto/request/sign-in.dto';
 import { SignUpDto } from './dto/request/sign-up.dto';
 import { SignInResponseDto } from './dto/response/sign-in-response.dto';
@@ -47,7 +48,7 @@ export class AuthService {
     const tokens = await this.getTokens(user.id, user.email, user.role);
     await this.updateRtHash(user.id, tokens.refreshToken);
 
-    res.cookie('jid', tokens.refreshToken, {
+    res.cookie(refreshTokenName, tokens.refreshToken, {
       httpOnly: true,
       secure: false,
       sameSite: 'lax',
@@ -74,11 +75,11 @@ export class AuthService {
     const [at, rt] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: this.config.getOrThrow<string>('JWT_ACCESS_SECRET'),
-        expiresIn: this.config.getOrThrow('JWT_ACCESS_EXPIRATION'),
+        expiresIn: parseInt(this.config.getOrThrow('JWT_ACCESS_EXPIRATION')),
       }),
       this.jwtService.signAsync(payload, {
         secret: this.config.getOrThrow<string>('JWT_REFRESH_SECRET'),
-        expiresIn: this.config.getOrThrow('JWT_REFRESH_EXPIRATION'),
+        expiresIn: parseInt(this.config.getOrThrow('JWT_REFRESH_EXPIRATION')),
       }),
     ]);
 
