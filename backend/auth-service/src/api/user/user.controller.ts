@@ -5,6 +5,8 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
+  ParseIntPipe,
   Patch,
   Query,
   Res,
@@ -38,6 +40,18 @@ export class UserController {
     @Query() query: FilterUserDto,
   ): Promise<PaginatedUserResponseDto> {
     return this.userService.getAllUsers(query);
+  }
+
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: '[ADMIN] Get any user by ID' })
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, type: UserResponseDto })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  getUserById(@Param('id', ParseIntPipe) id: number): Promise<UserResponseDto> {
+    return this.userService.getUserById(id);
   }
 
   @UseGuards(AccessTokenGuard)

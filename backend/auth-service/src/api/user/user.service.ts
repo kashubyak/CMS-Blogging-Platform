@@ -80,6 +80,12 @@ export class UserService {
     };
   }
 
+  async getUserById(id: number): Promise<UserResponseDto> {
+    const user = await this.userRepository.findById(id);
+    if (!user) throw new NotFoundException(`User with ID ${id} not found`);
+    return this.buildUserResponse(user);
+  }
+
   private buildUserResponse(user: User): UserResponseDto {
     return {
       id: user.id,
